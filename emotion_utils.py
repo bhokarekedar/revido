@@ -1,12 +1,12 @@
-# emotion_utils.py
-
 import os
 import cv2
 from fer import FER
 
-def detect_emotions_in_folder(frame_folder: str, output_file: str = "emotions_summary.txt"):
+def detect_emotions_in_folder(frame_folder: str, output_file: str = "outputs/emotions_summary.txt"):
     detector = FER()
     results = []
+
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     for file_name in sorted(os.listdir(frame_folder)):
         if file_name.endswith(".jpg"):
