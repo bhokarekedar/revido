@@ -4,7 +4,10 @@ from urllib.parse import urlparse, parse_qs
 from video_utils import download_video, extract_frames, extract_audio
 from emotion_utils import detect_emotions_in_folder
 from transcription_utils import transcribe_audio
+from sentiment_utils import analyze_sentiments
 
+from whisper import load_model
+import json
 
 def get_video_id(youtube_url):
     if "youtube.com" in youtube_url:
@@ -16,7 +19,6 @@ def get_video_id(youtube_url):
         return youtube_url.split("/")[-1]
     return "video"
 
-
 if __name__ == "__main__":
     YOUTUBE_URL = "https://www.youtube.com/shorts/rI6OIwEOt1M"
     VIDEO_ID = get_video_id(YOUTUBE_URL)
@@ -27,6 +29,8 @@ if __name__ == "__main__":
     FRAMES_DIR = os.path.join(OUTPUT_DIR, "frames")
     AUDIO_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}.mp3")
     EMOTION_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}_emotions.txt")
+    TRANSCRIPT_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}_transcript.txt")
+    SENTIMENT_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}_sentiments.json")
 
     # Step 1: Download video
     download_video(YOUTUBE_URL, VIDEO_FILE)
@@ -40,9 +44,19 @@ if __name__ == "__main__":
     # Step 4: Emotion Detection from Frames
     detect_emotions_in_folder(FRAMES_DIR, output_file=EMOTION_FILE)
 
-    # Step 5: Transcribe audio using Whisper
-    TRANSCRIPT_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}_transcript.txt")
-    transcribe_audio(AUDIO_FILE, TRANSCRIPT_FILE)
+    # Step 5: Transcribe with Whisper
+    whisper_model = load_model("base")
+    result = whisper_model.transcribe(VIDEO_FILE)
+    segments = result["segments"]
 
-    
+    # Save plain transcript
+    with open(TRANSCRIPT_FILE, "w") as f:
+        for seg in segments:
+            f.write(f"{seg['text'].strip()}\n")
 
+    # Step 6: Sentiment Analysis of each segment
+    sentiment_data = analyze_sentiments(segments)
+    with open(SENTIMENT_FILE, "w") as f:
+        json.dump(sentiment_data, f, indent=2)
+
+    print(f"[✓] Sentiment analysis complete. Saved to {SENTIMENT_FILE}")
