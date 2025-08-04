@@ -1,6 +1,7 @@
 import os
 from urllib.parse import urlparse, parse_qs
 
+from combine_emotion_and_sentiment import combine_emotion_and_sentiment
 from video_utils import download_video, extract_frames, extract_audio
 from emotion_utils import detect_emotions_in_folder
 from transcription_utils import transcribe_audio
@@ -31,6 +32,7 @@ if __name__ == "__main__":
     EMOTION_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}_emotions.txt")
     TRANSCRIPT_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}_transcript.txt")
     SENTIMENT_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}_sentiments.json")
+    COMBINED_FILE = os.path.join(OUTPUT_DIR, f"{VIDEO_ID}_combined.json")
 
     # Step 1: Download video
     download_video(YOUTUBE_URL, VIDEO_FILE)
@@ -60,3 +62,8 @@ if __name__ == "__main__":
         json.dump(sentiment_data, f, indent=2)
 
     print(f"[✓] Sentiment analysis complete. Saved to {SENTIMENT_FILE}")
+
+    # Step 7: Combine Emotion + Sentiment
+    combine_emotion_and_sentiment(EMOTION_FILE, SENTIMENT_FILE, COMBINED_FILE)
+
+    print(f"[✓] Combined emotion and sentiment data saved to {COMBINED_FILE}")
